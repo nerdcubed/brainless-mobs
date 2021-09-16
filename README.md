@@ -6,6 +6,9 @@ This is done by applying the following NBT tags to all mob entities saved in the
  - `NoAI`
  - `NoGravity`
  - `PersistenceRequired`
+ - `Fire`
+
+A button is also placed in the head slot of mobs that burn during daylight, unless there's already something occupying that slot.
 
 This is mostly intended to preserve worlds and their mobs as they were when the game last saved (while also saving on server resources), acting as a time capsule when loaded up on an appropriately configured server.
 

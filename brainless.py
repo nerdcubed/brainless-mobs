@@ -102,7 +102,9 @@ tags = nbt.TagCompound({
     'Invulnerable': nbt.TagInt(1),
     'NoAI': nbt.TagInt(1),
     'NoGravity': nbt.TagInt(1),
-    'PersistenceRequired': nbt.TagInt(1)
+    'PersistenceRequired': nbt.TagInt(1),
+    'Silent': nbt.TagInt(1),
+    'Fire': nbt.TagInt(1)
 })
 
 entity_blacklist = [
@@ -146,6 +148,14 @@ entity_blacklist = [
     'minecraft:wither_skull'
 ]
 
+heliophobic = [
+    'minecraft:skeleton',
+    'minecraft:zombie',
+    'minecraft:zombie_villager',
+    'minecraft:stray',
+    'minecraft:drowned'
+]
+
 files = args.world_folder
 total_files = len(files)
 print(f'Found {total_files} region files.')
@@ -165,11 +175,17 @@ for file in files:
             except:
                 continue
             chunk_count += 1
-            compound_data = chunk.value[''].value
+            compound_data = chunk.body.value
             entities = compound_data['Entities'].value
             for entity in entities:
                 if entity.value['id'].value not in entity_blacklist:
                     entity.update(tags)
+                    # Let's stop them from burning for eternity
+                    if entity.value['id'].value in heliophobic:
+                        armor_items = entity.value.get('ArmorItems', nbt.TagList([nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({})]))
+                        if not armor_items.value[3].value:
+                            new_armor = armor_items.value
+                            new_armor[3] = nbt.TagCompound({'Count': nbt.TagInt(1), 'id': nbt.TagString('stone_button')})
                     entity_count += 1
                 entity_total_count += 1
             region.save_chunk(chunk, chunk_x, chunk_z)
