@@ -151,6 +151,7 @@ total_files = len(files)
 print(f'Found {total_files} region files.')
 
 entity_count = 0
+entity_total_count = 0
 file_count = 0
 chunk_count = 0
 for file in files:
@@ -164,12 +165,14 @@ for file in files:
             except:
                 continue
             chunk_count += 1
-            compound = chunk.value[''].value
-            entities = compound['Entities'].value
+            compound_data = chunk.value[''].value
+            entities = compound_data['Entities'].value
             for entity in entities:
-                entity.update(tags)
-                entity_count += 1
+                if entity.value['id'].value not in entity_blacklist:
+                    entity.update(tags)
+                    entity_count += 1
+                entity_total_count += 1
             region.save_chunk(chunk, chunk_x, chunk_z)
     region.close()
 
-print(f'Done! Updated {entity_count} entities over {chunk_count} chunks.')
+print(f'Done! Updated {entity_count} out of {entity_total_count} entities over {chunk_count} chunks.')
