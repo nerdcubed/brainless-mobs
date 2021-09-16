@@ -7,21 +7,25 @@ import glob
 import time
 import zlib
 
-def valid_dir(parser, arg):
+
+def valid_dir(arg_parser, arg):
     if not os.path.isdir(arg):
-        parser.error(f'The directory {arg} does not exist.')
+        arg_parser.error(f'The directory {arg} does not exist.')
     os.chdir(arg)
     if not os.path.isfile('level.dat'):
-        parser.error(f'The directory does not appear to be a valid Minecraft world.')
+        arg_parser.error(f'The directory does not appear to be a valid Minecraft world.')
     if not os.path.isdir('entities/'):
-        parser.error(f'No entities folder found. Try updating the world to the latest Minecraft version and try again.')
+        arg_parser.error(f'No entities folder found. Try updating the world to the latest Minecraft version and try '
+                         f'again.')
     os.chdir('entities/')
     return glob.glob('*.mca')
+
 
 parser = argparse.ArgumentParser(description='Disable mob AI and other shit on Minecraft worlds.')
 parser.add_argument('world_folder', type=lambda x: valid_dir(parser, x), help='Path to the Minecraft world folder.')
 
 args = parser.parse_args()
+
 
 class EntityRegion(nbt.RegionFile):
     """
@@ -48,6 +52,7 @@ class EntityRegion(nbt.RegionFile):
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     """
+
     def save_chunk(self, chunk, chunk_x, chunk_z):
         """
         Saves the given chunk, which should be a ``TagRoot``, to the region
@@ -75,10 +80,10 @@ class EntityRegion(nbt.RegionFile):
         # Compute new extent
         for idx in range(len(extents) - 1):
             start = extents[idx][0] + extents[idx][1]
-            end = extents[idx+1][0]
+            end = extents[idx + 1][0]
             if (end - start) >= chunk_length:
                 chunk_offset = start
-                extents.insert(idx+1, (chunk_offset, chunk_length))
+                extents.insert(idx + 1, (chunk_offset, chunk_length))
                 break
 
         # Write extent header
@@ -97,6 +102,7 @@ class EntityRegion(nbt.RegionFile):
         # Truncate file
         self.fd.seek(4096 * extents[-1][0])
         self.fd.truncate()
+
 
 tags = nbt.TagCompound({
     'Invulnerable': nbt.TagInt(1),
@@ -182,10 +188,12 @@ for file in files:
                     entity.update(tags)
                     # Let's stop them from burning for eternity
                     if entity.value['id'].value in heliophobic:
-                        armor_items = entity.value.get('ArmorItems', nbt.TagList([nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({})]))
+                        armor_items = entity.value.get('ArmorItems', nbt.TagList(
+                            [nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({}), nbt.TagCompound({})]))
                         if not armor_items.value[3].value:
                             new_armor = armor_items.value
-                            new_armor[3] = nbt.TagCompound({'Count': nbt.TagInt(1), 'id': nbt.TagString('stone_button')})
+                            new_armor[3] = nbt.TagCompound(
+                                {'Count': nbt.TagInt(1), 'id': nbt.TagString('stone_button')})
                     entity_count += 1
                 entity_total_count += 1
             region.save_chunk(chunk, chunk_x, chunk_z)
